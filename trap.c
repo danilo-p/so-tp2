@@ -50,7 +50,7 @@ trap(struct trapframe *tf)
   case T_IRQ0 + IRQ_TIMER:
     if(cpuid() == 0){
       acquire(&tickslock);
-      ticks++;
+      ticks += INTERV;
       wakeup(&ticks);
       release(&tickslock);
     }
