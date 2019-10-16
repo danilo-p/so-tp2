@@ -89,6 +89,7 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->ticks = ticks;
+  p->priority = 2;
 
   release(&ptable.lock);
 
@@ -333,10 +334,37 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
 
+    // Checks for high priority processes
+    int found = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->priority == 3 && p->state == RUNNABLE) {
+        found = 1;
+        break;
+      }
+    }
+
+    // Checks for medium priority processes
+    if (!found) {
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->priority == 2 && p->state == RUNNABLE) {
+          found = 1;
+          break;
+        }
+      }
+    }
+
+    // Checks for low priority processes
+    if (!found) {
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->priority == 1 && p->state == RUNNABLE) {
+          found = 1;
+          break;
+        }
+      }
+    }
+
+    if (found) {
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -352,7 +380,6 @@ scheduler(void)
       c->proc = 0;
     }
     release(&ptable.lock);
-
   }
 }
 
