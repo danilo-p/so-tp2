@@ -53,7 +53,7 @@ argint(int n, int *ip)
 }
 
 // Fetch the nth word-sized system call argument as a pointer
-// to a block of memory of size bytes.  Check that the pointer
+// to a block of memory of size bytes. Check that the pointer
 // lies within the process address space.
 int
 argptr(int n, char **pp, int size)
@@ -66,6 +66,23 @@ argptr(int n, char **pp, int size)
   if(size < 0 || (uint)i >= curproc->sz || (uint)i+size > curproc->sz)
     return -1;
   *pp = (char*)i;
+  return 0;
+}
+
+// Fetch the nth word-sized system call argument as an integer pointer
+// to an integer value. Check that the pointer lies within the process
+// address space.
+int
+argintptr(int n, int **pp)
+{
+  int i;
+  struct proc *curproc = myproc();
+ 
+  if(argint(n, &i) < 0)
+    return -1;
+  if((uint)i >= curproc->sz || (uint)i+sizeof(int) > curproc->sz)
+    return -1;
+  *pp = (int*)i;
   return 0;
 }
 
