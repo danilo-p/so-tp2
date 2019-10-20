@@ -49,7 +49,8 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  uint ticks;                  // Process private tick counter
+  uint ticks_at_switch;        // Ticks when the process was selected to run
+  uint ticks_aging;      // Ticks when the process was last_run
   int priority;                // Process priority
 };
 

@@ -89,6 +89,9 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->priority = 2;
+  acquire(&tickslock);
+  p->ticks_aging = ticks;
+  release(&tickslock);
 
   release(&ptable.lock);
 
@@ -328,49 +331,86 @@ scheduler(void)
   c->proc = 0;
   
   for(;;){
+    // [TP2]
+    // Precisamos pegar o valor atual de ticks antes de habilitar interrupções,
+    // para evitar condições de corrida com o tratamento das interrupções que
+    // também utilizam o tickslock.
+    acquire(&tickslock);
+    uint xticks = ticks;
+    release(&tickslock);
+
     // Enable interrupts on this processor.
     sti();
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
 
-    // Checks for high priority processes
-    int found = 0;
+    // [TP2]
+    // O loop abaixo aumenta a prioridade dos processos para evitar inanição.
+    // (Aging)
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      // Aumento de prioridade de 1 para 2
+      if(p->priority == 1
+          && p->state == RUNNABLE
+          && (xticks - p->ticks_aging) >= T1TO2) {
+        p->priority = 2;
+        p->ticks_aging = xticks;
+        continue;
+      }
+
+      // Aumento de prioridade de 2 para 3
+      if(p->priority == 2
+          && p->state == RUNNABLE
+          && (xticks - p->ticks_aging) >= T2TO3) {
+        p->priority = 3;
+        p->ticks_aging = xticks;
+        continue;
+      }
+    }
+
+    // [TP2]
+    // Os loops abaixo selecionam processos de acordo com as filas multinível.
+    // Primeiro os processos com prioridade 3 são checados, depois 2, depois 1.
+    int process_found = 0;
+    // Procura por processos de prioridade 3
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->priority == 3 && p->state == RUNNABLE) {
-        found = 1;
+        process_found = 1;
         break;
       }
     }
-
-    // Checks for medium priority processes
-    if (!found) {
+    if (!process_found) {
+      // Procura por processos de prioridade 2
       for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(p->priority == 2 && p->state == RUNNABLE) {
-          found = 1;
+          process_found = 1;
           break;
         }
       }
     }
-
-    // Checks for low priority processes
-    if (!found) {
+    if (!process_found) {
+      // Procura por processos de prioridade 1
       for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(p->priority == 1 && p->state == RUNNABLE) {
-          found = 1;
+          process_found = 1;
           break;
         }
       }
     }
 
-    if (found) {
+    if (process_found) {
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-      p->ticks = ticks;
+
+      // [TP2]
+      // Assinalamos o momento que o processo foi colocado na CPU para executar.
+      // No tratamento da trap para incremento de clock (arquivo trap.c),
+      // utilizamos este valor para checar se o processo deve preemptar.
+      p->ticks_at_switch = xticks;
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
@@ -559,4 +599,12 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int
+set_prio(int priority)
+{
+  cprintf("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% set_prio(int priority) %d %d\n", myproc()->pid, priority);
+  myproc()->priority = priority;
+  return 0;
 }
