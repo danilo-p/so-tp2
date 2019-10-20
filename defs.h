@@ -121,6 +121,7 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 int             set_prio(int);
+void            increment_procs_counters(void);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

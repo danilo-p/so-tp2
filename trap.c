@@ -51,6 +51,7 @@ trap(struct trapframe *tf)
     if(cpuid() == 0){
       acquire(&tickslock);
       ticks++;
+      increment_procs_counters();
       wakeup(&ticks);
       release(&tickslock);
     }
@@ -102,25 +103,13 @@ trap(struct trapframe *tf)
 
   // Force process to give up CPU on clock tick.
   // If interrupts were on while locks held, would need to check nlock.
-  acquire(&tickslock);
   if(myproc() && myproc()->state == RUNNING &&
      tf->trapno == T_IRQ0+IRQ_TIMER &&
      // [TP2]
      // Detecta se INTERV ticks já se passaram desde que o processo foi colocado
      // para rodar na CPU.
-     (ticks - myproc()->ticks_at_switch) >= INTERV)
-  {
-    // [TP2]
-    // Assinala o momento em que o processo desistiu voluntariamente da CPU na
-    // variável de controle de idade, para evitar inanição.
-    myproc()->ticks_aging = ticks;
-    release(&tickslock);
+     myproc()->rutime % INTERV == 0)
     yield();
-  }
-  else
-  {
-    release(&tickslock);
-  }
 
   // Check if the process has been killed since we yielded
   if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)

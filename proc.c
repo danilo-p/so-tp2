@@ -93,12 +93,17 @@ found:
   // Assinala a prioridade padrão 2 para todo processo alocado.
   p->priority = 2;
 
-  // [TP2]
-  // Assinala o valor de ticks na variável de controle de idade quando o
-  // processo é alocado para evitar inanição.
   acquire(&tickslock);
-  p->ticks_aging = ticks;
+  // [TP2]
+  // Assinala o valor de ticks na variável de momento de criação do processo.
+  p->ctime = ticks;
   release(&tickslock);
+
+  // [TP2]
+  // Inicializa os contadores de tempo.
+  p->stime = 0;
+  p->retime = 0;
+  p->rutime = 0;
 
   release(&ptable.lock);
 
@@ -338,14 +343,6 @@ scheduler(void)
   c->proc = 0;
   
   for(;;){
-    // [TP2]
-    // Precisamos pegar o valor atual de ticks antes de habilitar interrupções,
-    // para evitar condições de corrida com o tratamento das interrupções que
-    // também utilizam o tickslock.
-    acquire(&tickslock);
-    uint xticks = ticks;
-    release(&tickslock);
-
     // Enable interrupts on this processor.
     sti();
 
@@ -359,18 +356,16 @@ scheduler(void)
       // Aumento de prioridade de 1 para 2
       if(p->priority == 1
           && p->state == RUNNABLE
-          && (xticks - p->ticks_aging) >= T1TO2) {
+          && p->retime % P1TO2 == 0) {
         p->priority = 2;
-        p->ticks_aging = xticks;
         continue;
       }
 
       // Aumento de prioridade de 2 para 3
       if(p->priority == 2
           && p->state == RUNNABLE
-          && (xticks - p->ticks_aging) >= T2TO3) {
+          && p->retime % P2TO3 == 0) {
         p->priority = 3;
-        p->ticks_aging = xticks;
         continue;
       }
     }
@@ -412,12 +407,6 @@ scheduler(void)
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-
-      // [TP2]
-      // Assinalamos o momento que o processo foi colocado na CPU para executar.
-      // No tratamento da trap para incremento de clock (arquivo trap.c),
-      // utilizamos este valor para checar se o processo deve preemptar.
-      p->ticks_at_switch = xticks;
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
@@ -613,4 +602,21 @@ set_prio(int priority)
 {
   myproc()->priority = priority;
   return 0;
+}
+
+void
+increment_procs_counters(void)
+{
+  struct proc *p;
+
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == SLEEPING)
+      p->stime++;
+    else if(p->state == RUNNABLE)
+      p->retime++;
+    else if(p->state == RUNNING)
+      p->rutime++;
+  }
+  release(&ptable.lock);
 }
