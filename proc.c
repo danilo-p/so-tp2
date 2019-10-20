@@ -631,7 +631,7 @@ int
 wait2(int* retime, int* rutime, int* stime)
 {
   if(myproc()->killed)
-   return -1;
+    return -1;
 
   *retime = myproc()->retime;
   *rutime = myproc()->rutime;
