@@ -11,6 +11,6 @@
 #define LOGSIZE      (MAXOPBLOCKS*3)  // max data blocks in on-disk log
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 #define FSSIZE       1000  // size of file system in blocks
-#define INTERV       5
-#define T1TO2         5 //Promove um processo da fila 1 para fila 2 se tempo de espera maior que 5 ticks
-#define T2TO3         5 //Promove um processo da fila 2 para fila 3 se tempo de espera maior que 5 ticks
+#define INTERV       5 // Define quantos ticks um processo fica em execução antes de preemptar
+#define T1TO2        5 // Promove um processo da fila 1 para fila 2 se tempo de espera maior que T1TO2 ticks
+#define T2TO3        5 // Promove um processo da fila 2 para fila 3 se tempo de espera maior que T2TO3 ticks

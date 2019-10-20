@@ -49,9 +49,9 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  uint ticks_at_switch;        // Ticks when the process was selected to run
-  uint ticks_aging;      // Ticks when the process was last_run
-  int priority;                // Process priority
+  uint ticks_at_switch;        // [TP2] Ticks quando o processo iniciou a execução na CPU depois de ser selecionado pelo escalonador
+  uint ticks_aging;            // [TP2] Ticks quando o processo foi colocado em espera para seleção pelo escalonador
+  int priority;                // [TP2] Prioridade do processo
 };
 
 // Process memory is laid out contiguously, low addresses first:

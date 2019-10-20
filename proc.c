@@ -88,7 +88,14 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+
+  // [TP2]
+  // Assinala a prioridade padrão 2 para todo processo alocado.
   p->priority = 2;
+
+  // [TP2]
+  // Assinala o valor de ticks na variável de controle de idade quando o
+  // processo é alocado para evitar inanição.
   acquire(&tickslock);
   p->ticks_aging = ticks;
   release(&tickslock);
@@ -604,7 +611,6 @@ procdump(void)
 int
 set_prio(int priority)
 {
-  cprintf("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% set_prio(int priority) %d %d\n", myproc()->pid, priority);
   myproc()->priority = priority;
   return 0;
 }
