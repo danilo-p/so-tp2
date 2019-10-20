@@ -99,3 +99,19 @@ sys_set_prio(void)
     return set_prio(priority);
   return -1;
 }
+
+int sys_wait2(void)
+{
+  int* retime;
+  int* rutime;
+  int* stime;
+
+  if(argintptr(0, &retime) < 0)
+    return -1;
+  if(argintptr(1, &rutime) < 0)
+    return -1;
+  if(argintptr(2, &stime) < 0)
+    return -1;
+  
+  return wait2(retime, rutime, stime);
+}

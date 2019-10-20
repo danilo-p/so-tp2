@@ -122,6 +122,7 @@ void            wakeup(void*);
 void            yield(void);
 int             set_prio(int);
 void            increment_procs_counters(void);
+int             wait2(int* retime, int* rutime, int* stime);
 
 // swtch.S
 void            swtch(struct context**, struct context*);
@@ -157,6 +158,7 @@ int             argstr(int, char**);
 int             fetchint(uint, int*);
 int             fetchstr(uint, char**);
 void            syscall(void);
+int             argintptr(int, int**);
 
 // timer.c
 void            timerinit(void);

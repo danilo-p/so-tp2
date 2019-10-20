@@ -600,8 +600,13 @@ procdump(void)
 int
 set_prio(int priority)
 {
-  myproc()->priority = priority;
-  return 0;
+  if(myproc()->killed)
+    return -1;
+  
+  else{
+    myproc()->priority = priority;
+    return 0;
+  }
 }
 
 void
@@ -619,4 +624,18 @@ increment_procs_counters(void)
       p->rutime++;
   }
   release(&ptable.lock);
+}
+
+// Current process time-related status
+int
+wait2(int* retime, int* rutime, int* stime)
+{
+  if(myproc()->killed)
+   return -1;
+
+  *retime = myproc()->retime;
+  *rutime = myproc()->rutime;
+  *stime = myproc()->stime;
+
+  return 0;
 }
