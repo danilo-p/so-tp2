@@ -633,9 +633,17 @@ wait2(int* retime, int* rutime, int* stime)
   if(myproc()->killed)
     return -1;
 
+  cprintf("AH CARAI 3\n");
+
+  wait();
+
+  cprintf("AH CARAI 4\n");
+
   *retime = myproc()->retime;
   *rutime = myproc()->rutime;
   *stime = myproc()->stime;
+
+  cprintf("AH CARAI 5\n");
 
   return 0;
 }
