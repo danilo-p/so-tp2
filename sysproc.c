@@ -106,16 +106,12 @@ int sys_wait2(void)
   int* rutime;
   int* stime;
 
-  cprintf("AH CARAI\n");
-
   if(argintptr(0, &retime) < 0)
     return -1;
   if(argintptr(1, &rutime) < 0)
     return -1;
   if(argintptr(2, &stime) < 0)
     return -1;
-
-  cprintf("AH CARAI 2\n");
 
   return wait2(retime, rutime, stime);
 }

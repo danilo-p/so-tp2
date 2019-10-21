@@ -44,38 +44,41 @@ void sanity(int n)
 {
     int stop = 3 * n;
     int i = 0;
-
+    int retime, rutime, stime, old_retime = 0, old_rutime = 0, old_stime = 0;
     for (i = 0; i < stop; i++)
     {
-        int retime, rutime, stime;
-        int pid = fork();
-        if (pid == 0)
-        { // Processo pai
-            wait2(&retime, &rutime, &stime);
-            printf(stdout, "retime: %d\n", retime);
-            printf(stdout, "rutime: %d\n", rutime);
-            printf(stdout, "stime: %d\n", stime);
-            printf(stdout, "\n");
-        }
-        else if (pid > 0)
-        { // Processo filho
-            printf(stdout, "PID: %d\n", pid);
-            if (pid % 3 == 0)
-            { //CPU-Bound process
+        int fpid = fork();
+        if (fpid == 0)
+        {
+            int cpid = getpid();
+            printf(stdout, "PID: %d\n", cpid);
+            if (cpid % 3 == 0)
+            {
                 printf(stdout, "Tipo: CPU-Bound\n");
                 cpu_bound();
             }
-            else if (pid % 3 == 1)
-            { //S-CPU process
+            else if (cpid % 3 == 1)
+            {
                 printf(stdout, "Tipo: S-CPU\n");
                 s_cpu();
             }
-            else if (pid % 3 == 2)
-            { //IO-Bound process
+            else if (cpid % 3 == 2)
+            {
                 printf(stdout, "Tipo: IO-Bound\n");
                 io_bound();
             }
             exit();
+        }
+        else if (fpid > 0)
+        {
+            wait2(&retime, &rutime, &stime);
+            printf(stdout, "retime: %d\n", retime - old_retime);
+            printf(stdout, "rutime: %d\n", rutime - old_rutime);
+            printf(stdout, "stime: %d\n", stime - old_stime);
+            printf(stdout, "\n");
+            old_retime = retime;
+            old_rutime = rutime;
+            old_stime = stime;
         }
     }
 }
